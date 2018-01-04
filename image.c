@@ -2,21 +2,24 @@
 #include <stdlib.h>
 #include "image.h"
 
+// TODO: Document methods
+
 int label_components(image *image) {
     if (!image) {
         fprintf(stderr, "ERROR: No image given!");
         return EXIT_FAILURE;
     }
 
-    // create equivalence table
-    // if not created print error and exit failure
-
+    // create equivalence and neighbors table
+    int equivalence[5000];
+    int neighbors[4];
 
     // all directions to get mask pixels from current
     // pixel in a format of [x_offset, y_offset]
     int mask[4][2] = {{-1, 0}, {-1, -1}, {0, -1}, {1, -1}};
 
-    int x, mx, y, my, m, color = 0;
+    // first image pass
+    int x, mx, y, my, m, neighbor = 0, neighbor_index = 0, color = 1;
     for (y = 0; y < image->height; y++) {
         for (x = 0; x < image->width; x++) {
 
@@ -26,23 +29,45 @@ int label_components(image *image) {
                 continue;
             }
 
+            // clear a table of neighboring colors
+            neighbor_index = 0;
+
             // all mask pixels
             for (m = 0; m < 4; m++) {
                 mx = x + mask[m][0];
                 my = y + mask[m][1];
 
-                if (in_bounds(mx, my, image->width, image->height) && image->data[my][mx] != 0) {
-                    printf("%d %d\n", mx, my);
+                if (!in_bounds(mx, my, image->width, image->height) && image->data[my][mx] != 0) {
+                    // printf("%d %d\n", mx, my);   // TODO: Delete before deploy
+                    continue;
                 }
+
+                neighbor = image->data[my][mx];
+
+                if (neighbor) {
+                    neighbors[neighbor_index] = neighbor;
+                    neighbor_index++;
+                }
+            }
+
+            // if current pixel has a colored (non-black) neighbor
+            // else select
+            if (neighbor_index) {
+                image->data[y][x] = color;
+                color++;
+            } else {
+
             }
         }
     }
 
-    return EXIT_SUCCESS;
-}
+    // second image pass
+    // TODO: Second image pass
 
-int in_bounds(int x, int y, int w, int h) {
-    return x >= 0 && x < w && y >= 0 && y < h;
+    // free both tables
+    free(equivalence);
+
+    return EXIT_SUCCESS;
 }
 
 image *read_image(char *image_name) {
@@ -149,25 +174,25 @@ image *read_image(char *image_name) {
     return image;
 }
 
-FILE *save_image(char *image_name, image *image) {
-    FILE *file = NULL;
+int save_image(char *image_name, image *image) {
     int i, j;
 
     if (!image) {
         fprintf(stderr, "ERROR: Image instance missing!");
-        return NULL;
+        return EXIT_FAILURE;
     }
 
     if (!image_name) {
         fprintf(stderr, "ERROR: Image name missing!");
-        return NULL;
+        return EXIT_FAILURE;
     }
 
     // open file
+    FILE *file = NULL;
     file = fopen(image_name, "w");
     if (!file) {
         fprintf(stderr, "ERROR: Cannot create file!\n");
-        return NULL;
+        return EXIT_FAILURE;
     }
 
     // write data
@@ -180,8 +205,9 @@ FILE *save_image(char *image_name, image *image) {
         }
     }
 
+    fflush(file);
     fclose(file);
-    return file;
+    return EXIT_SUCCESS;
 }
 
 void free_image(image **image) {
@@ -199,4 +225,20 @@ void free_image(image **image) {
     free((*image));
 
     *image = NULL;
+}
+
+int is_black_white(image *image) {
+    for (int i = 0; i < image->height; i++) {
+        for (int j = 0; j < image->width; j++) {
+            if (image->data[i][j] != 255 && image->data[i][j] != 0) {
+                return 0;
+            }
+        }
+    }
+
+    return 1;
+}
+
+int in_bounds(int x, int y, int w, int h) {
+    return x >= 0 && x < w && y >= 0 && y < h;
 }
