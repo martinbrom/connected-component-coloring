@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-#define uchar unsigned char
+#define uint unsigned int
 
 /**
  * Class containing image data

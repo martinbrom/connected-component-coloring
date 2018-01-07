@@ -2,7 +2,39 @@
 #include <stdlib.h>
 #include "image.h"
 
-// TODO: Document methods
+// TODO: Document functions
+
+// TODO: Add to header file
+int find_root(int *roots, int item) {
+    int parent = roots[item];
+    // printf("finding root of item = %d\n", item);
+
+    // if parent is the same as item, we found the set root,
+    // else try to look recursively up the tree until we find root
+    return parent == item ? item : find_root(roots, parent);
+}
+
+// TODO: Add to header file
+void unite_sets(int *roots, int x, int y) {
+
+    // printf("uniting x = %d and y = %d\n", x, y);
+
+    int root_x = find_root(roots, x);
+    int root_y = find_root(roots, y);
+
+    // both colors already belong to the same set
+    if (root_x == root_y) {
+        return;
+    }
+
+    // set the root with bigger index to the value
+    // of the root with smaller index
+    if (root_x < root_y) {
+        roots[root_y] = roots[root_x];
+    } else {
+        roots[root_x] = roots[root_y];
+    }
+}
 
 int label_components(image *image) {
     if (!image) {
@@ -11,15 +43,22 @@ int label_components(image *image) {
     }
 
     // create equivalence and neighbors table
-    int equivalence[5000];
+    printf("Creating arrays...");
+    int sets[10000];
+    int set_index = 1;  // starts at 1 because color 0 is black, not grey
     int neighbors[4];
+    int neighbor_index = 0;
+    printf("done\n");
 
     // all directions to get mask pixels from current
     // pixel in a format of [x_offset, y_offset]
+    printf("Creating mask...");
     int mask[4][2] = {{-1, 0}, {-1, -1}, {0, -1}, {1, -1}};
+    printf("done\n");
 
     // first image pass
-    int x, mx, y, my, m, neighbor = 0, neighbor_index = 0, color = 1;
+    printf("First algorithm pass...");
+    int x, mx, y, my, m, neighbor = 0, color = 1;
     for (y = 0; y < image->height; y++) {
         for (x = 0; x < image->width; x++) {
 
@@ -37,35 +76,46 @@ int label_components(image *image) {
                 mx = x + mask[m][0];
                 my = y + mask[m][1];
 
-                if (!in_bounds(mx, my, image->width, image->height) && image->data[my][mx] != 0) {
-                    // printf("%d %d\n", mx, my);   // TODO: Delete before deploy
+                if (!in_bounds(mx, my, image->width, image->height)) {
                     continue;
                 }
 
+                // if this mask pixel is not black, add it as a current pixel neighbor
                 neighbor = image->data[my][mx];
-
                 if (neighbor) {
                     neighbors[neighbor_index] = neighbor;
                     neighbor_index++;
                 }
             }
 
-            // if current pixel has a colored (non-black) neighbor
-            // else select
-            if (neighbor_index) {
+            // if current pixel has a colored (non-black) neighbor pick the first one
+            // else select a new previously not used color
+            if (neighbor_index != 0) {
+                image->data[y][x] = neighbors[0];
+            } else {
+                sets[set_index++] = color;
                 image->data[y][x] = color;
                 color++;
-            } else {
+            }
 
+            // unite all colors found in this step, pixel color and mask pixel colors
+            int i;
+            for (i = 0; i < neighbor_index; i++) {
+                neighbor = neighbors[i];
+                unite_sets(sets, image->data[y][x], neighbor);
             }
         }
+    }
+
+    int i;
+    for (i = 0; i < 400; i++) {
+        printf("%d\n", sets[i]);
     }
 
     // second image pass
     // TODO: Second image pass
 
-    // free both tables
-    free(equivalence);
+    printf("all done\n");
 
     return EXIT_SUCCESS;
 }
@@ -79,7 +129,7 @@ image *read_image(char *image_name) {
     }
 
     // open file
-    printf("Opening file...");
+    printf("Opening file...\n");
     FILE *file = fopen(image_name, "r");
     if (!file) {
         fprintf(stderr, "ERROR: Cannot read file!\n");
@@ -87,7 +137,7 @@ image *read_image(char *image_name) {
     }
 
     // read the first line
-    printf("Reading the first line...");
+    printf("Reading the first line...\n");
     int buffer_size = 4;
     char buffer[buffer_size];
     fgets(buffer, buffer_size, file);
@@ -100,18 +150,20 @@ image *read_image(char *image_name) {
         fclose(file);
         return NULL;
     }
+    printf("w = %d, h = %d\n", width, height);
 
     // read maximal gray value
     printf("Reading maximal grey value...");
     int max;
-    if (fscanf(file, "%u", &max) != 1 || max > 255) {
+    if (fscanf(file, "%u\n", &max) != 1 || max > 255) {
         fprintf(stderr, "ERROR: Wrong format of maximal grey value!\n");
         fclose(file);
         return NULL;
     }
+    printf("mgv = %d\n", max);
 
     // allocate memory for image instance
-    printf("Allocating memory for image instance...");
+    printf("Allocating memory for image instance...\n");
     image *image = malloc(sizeof(image));
     if (!image) {
         fclose(file);
@@ -119,7 +171,7 @@ image *read_image(char *image_name) {
     }
 
     // allocate memory for image data
-    printf("Allocating memory for image data...");
+    printf("Allocating memory for image data...\n");
     image->data = (int **) malloc(height * sizeof(int *));
     if (!image->data) {
         free(image);
@@ -145,7 +197,7 @@ image *read_image(char *image_name) {
     }
 
     // read data fom file
-    printf("Reading data from file...");
+    printf("Reading data from file...\n");
     for (i = 0; i < height; i++) {
         for (j = 0; j < width; j++) {
             if (feof(file)) {
@@ -161,16 +213,16 @@ image *read_image(char *image_name) {
                 return NULL;
             }
 
-            image->data[i][j] = (uchar) fgetc(file);
+            image->data[i][j] = (uint) fgetc(file);
         }
     }
 
     image->width = width;
     image->height = height;
-    image->max_grey_value = (uchar) max;
+    image->max_grey_value = (uint) max;
     fclose(file);
 
-    printf("Loading finished, returning image...");
+    printf("Loading finished, returning image...\n");
     return image;
 }
 
@@ -236,6 +288,7 @@ int is_black_white(image *image) {
         }
     }
 
+    // printf("Image is black and white only...\n");
     return 1;
 }
 
