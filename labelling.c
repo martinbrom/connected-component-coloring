@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include "labelling.h"
 #include "disjoint_set.h"
@@ -17,23 +16,27 @@
  * @return Colored image
  */
 int label_components(image *image) {
-    if (!image) {
-        fprintf(stderr, "ERROR: No image given!");
-        return EXIT_FAILURE;
-    }
+    unsigned int neighbors[4];   // array of mask pixel colors
+    unsigned int set_index = 1;  // starts at 1 because color 0 is black, not grey
+    unsigned int neighbor_index = 0;
+    unsigned int sets[10000];    // array of disjoint set roots
+    unsigned int i;
 
-    // create sets and neighbors tables and their first free index
-    int sets[10000];    // array of disjoint set roots
-    int neighbors[4];   // array of mask pixel colors
-    int set_index = 1;  // starts at 1 because color 0 is black, not grey
-    int neighbor_index = 0;
+    // initialize all items as their own distinct sets
+    for (i = 0; i < 10000; i++) {
+        sets[i] = i;
+    }
 
     // all directions to get mask pixels from current
     // pixel in a format of [x_offset, y_offset] clockwise
     int mask[4][2] = {{-1, 0}, {-1, -1}, {0, -1}, {1, -1}};
 
+    int x, mx, y, my, m;
+    unsigned int neighbor, color = 1;
+    unsigned int root;
+    unsigned int max_grey_value;
+
     // first image pass
-    int x, mx, y, my, m, neighbor, color = 1;
     for (y = 0; y < image->height; y++) {
         for (x = 0; x < image->width; x++) {
 
@@ -74,7 +77,6 @@ int label_components(image *image) {
             }
 
             // unite all colors found in this step, pixel color and mask pixel colors
-            int i;
             for (i = 0; i < neighbor_index; i++) {
                 neighbor = neighbors[i];
                 unite_sets(sets, image->data[y][x], neighbor);
@@ -85,8 +87,7 @@ int label_components(image *image) {
     // second image pass
     // set color of each pixel to the value of its disjoint set root
     // and find the maximal grey pixel value
-    int root;
-    int max_grey_value = -1;
+    max_grey_value = 0;
     for (y = 0; y < image->height; y++) {
         for (x = 0; x < image->width; x++) {
             root = find_root(sets, image->data[y][x]);

@@ -3,20 +3,25 @@
 
 #include <stdio.h>
 
-#define uint unsigned int
-
 /**
  * Class containing image data
  */
 typedef struct {
-    int width;
-    int height;
-    int max_grey_value;
-    int **data;
+    unsigned int width;
+    unsigned int height;
+    unsigned int max_grey_value;
+    unsigned int **data;
 } image;
 
 /**
- * Reads a file with given file name
+ * Prints an error message to stderr and closes given file
+ * @param message
+ * @param file
+ */
+void reading_error(char *message, FILE *file);
+
+/**
+ * Reads a file with given file name and validates data
  * @param filename
  * @return Pointer to an image instance populated
  *         with data from a given file
@@ -25,26 +30,17 @@ image *read_image(char *filename);
 
 /**
  * Saves given image instance as a file with given file name
- * @param image
+ * @param img
  * @param filename
  * @return Exit code
  */
-int save_image(image *image, char *filename);
+int save_image(image *img, char *filename);
 
 /**
  * Clears memory taken by given image
- * @param image
+ * @param img
  */
-void free_image(image **image);
-
-/**
- * Checks whether an image contains only accepted colors,
- * black or white
- * @param image
- * @return True (1) when image contains only black and white
- *         pixels, False (0) otherwise
- */
-int is_black_white(image *image);
+void free_image(image **img);
 
 /**
  * Checks whether given x and y coordinates
