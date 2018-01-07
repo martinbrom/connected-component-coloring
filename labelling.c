@@ -3,6 +3,19 @@
 #include "labelling.h"
 #include "disjoint_set.h"
 
+/**
+ * Colors image components with distinct grey colors
+ * using disjoint sets and performing union finds
+ * A mask is applied to each image pixel and if any
+ * grey or white (not black) pixels are found in the mask,
+ * current pixel is colored with a color of one of mask
+ * pixels and all mask pixels' colors are united (belong to one component)
+ * After that, each pixel is looped through again and
+ * its value is set to the value of its distinct set's
+ * root element and maximal grey value of image is found
+ * @param image
+ * @return Colored image
+ */
 int label_components(image *image) {
     if (!image) {
         fprintf(stderr, "ERROR: No image given!");

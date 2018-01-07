@@ -58,8 +58,7 @@ image *read_image(char *image_name) {
         image->data[i] = (int *) malloc(width * sizeof(int));
 
         if (!image->data[i]) {
-            while (i != 0) {
-                i--;
+            for (i; i <= 0; i--) {
                 free(image->data[i]);
             }
 
@@ -73,19 +72,7 @@ image *read_image(char *image_name) {
     // read data fom file
     for (i = 0; i < height; i++) {
         for (j = 0; j < width; j++) {
-            if (feof(file)) {
-                fprintf(stderr, "ERROR: Not enough data in the file %s according to image dimensions!\n", image_name);
-
-                for (i = 0; i < height; i++) {
-                    free(image->data[i]);
-                }
-
-                free(image->data);
-                free(image);
-                fclose(file);
-                return NULL;
-            }
-
+            // maybe check for not enough data?
             image->data[i][j] = (uint) fgetc(file);
         }
     }
@@ -99,8 +86,6 @@ image *read_image(char *image_name) {
 }
 
 int save_image(image *image, char *image_name) {
-    int i, j;
-
     if (!image) {
         fprintf(stderr, "ERROR: Image instance missing!");
         return EXIT_FAILURE;
@@ -123,6 +108,8 @@ int save_image(image *image, char *image_name) {
     fprintf(file, "%s\n", "P5");
     fprintf(file, "%d %d\n", image->width, image->height);
     fprintf(file, "%d\n", image->max_grey_value);
+
+    int i, j;
     for (i = 0; i < image->height; ++i) {
         for (j = 0; j < image->width; ++j) {
             fputc(image->data[i][j], file);

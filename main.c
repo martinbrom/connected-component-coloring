@@ -3,6 +3,12 @@
 #include "image.h"
 #include "labelling.h"
 
+/**
+ * Main application function
+ * @param argc
+ * @param argv
+ * @return Exit code
+ */
 int main(int argc, char *argv[]) {
 
     // check program arguments

@@ -2,15 +2,18 @@
 #define ___DISJOINT_SET__
 
 /**
- *
+ * Finds a root element of a disjoint set,
+ * that the given item is located in
  * @param roots
  * @param item
- * @return
+ * @return A root element of a disjoint set
  */
 int find_root(int *roots, int item);
 
 /**
- *
+ * Performs a union on two disjoint sets
+ * Disjoint set with a greater root element
+ * is united under the other disjoint set
  * @param roots
  * @param x
  * @param y
