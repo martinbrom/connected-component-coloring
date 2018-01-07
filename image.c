@@ -1,88 +1,100 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "image.h"
 
 image *read_image(char *image_name) {
+    FILE *input_file = NULL;
+    image *img = NULL;
+    size_t width, height;
+    unsigned int max, i, j;
+    int buffer_length = 4;
+    char buffer[buffer_length];
 
-    // check given image name
     if (!image_name) {
-        fprintf(stderr, "ERROR: No image name given!\n");
+        fprintf(stderr, "ERROR: no filename given!\n");
         return NULL;
     }
 
-    // open file
-    FILE *file = fopen(image_name, "r");
-    if (!file) {
-        fprintf(stderr, "ERROR: Cannot read file!\n");
+    /* open file */
+    input_file = fopen(image_name, "r");
+    if (!input_file) {
+        fprintf(stderr, "ERROR: cannot read the file %s!\n", image_name);
         return NULL;
     }
 
-    // read the first line
-    int buffer_size = 4;
-    char buffer[buffer_size];
-    fgets(buffer, buffer_size, file);
-
-    // read image width and height
-    int width, height;
-    if (fscanf(file, "%u %u", &width, &height) != 2) {
-        fprintf(stderr, "ERROR: Wrong format of width or height!\n");
-        fclose(file);
+    /* read the first line with the magic number and check if it equals the PGM_P5 magic number */
+    if (!fgets(buffer, buffer_length, input_file) || strncmp(buffer, "P5", 2) != 0){
+        fprintf(stderr, "ERROR: File is not in correct format!\n");
+        fclose(input_file);
         return NULL;
     }
 
-    // read maximal gray value
-    int max;
-    if (fscanf(file, "%u\n", &max) != 1 || max > 255) {
-        fprintf(stderr, "ERROR: Wrong format of maximal grey value!\n");
-        fclose(file);
+    /* read the image width and height */
+    if (fscanf(input_file, "%zu %zu", &width, &height) != 2) {
+        fprintf(stderr, "ERROR: File has width and height in the wrong format!\n");
+        fclose(input_file);
         return NULL;
     }
 
-    // allocate memory for image instance
-    image *image = malloc(sizeof(image));
-    if (!image) {
-        fclose(file);
+    /* read the max gray value */
+    if (fscanf(input_file, "%u\n", &max) != 1 || max > 255) {
+        fprintf(stderr, "ERROR: File has max grey item in the wrong format!\n");
+        fclose(input_file);
         return NULL;
     }
 
-    // allocate memory for image data
-    image->data = (int **) malloc(height * sizeof(int *));
-    if (!image->data) {
-        free(image);
-        fclose(file);
+    /* alloc image */
+    img = malloc(sizeof(image));
+    if (!img) {
+        fclose(input_file);
         return NULL;
     }
 
-    int i, j;
+    /* alloc image data*/
+    img->data = (unsigned int **) malloc(height * sizeof(unsigned int *));
+    if (!img->data) {
+        free(img);
+        fclose(input_file);
+        return NULL;
+    }
     for (i = 0; i < height; i++) {
-        image->data[i] = (int *) malloc(width * sizeof(int));
-
-        if (!image->data[i]) {
-            for (i; i <= 0; i--) {
-                free(image->data[i]);
+        img->data[i] = (unsigned int *) malloc(width * sizeof(unsigned int));
+        if (!img->data[i]) {
+            while (i) {
+                free(img->data[--i]);
             }
-
-            free(image->data);
-            free(image);
-            fclose(file);
+            free(img->data);
+            free(img);
+            fclose(input_file);
             return NULL;
         }
     }
 
-    // read data fom file
+    /* read data from the file */
     for (i = 0; i < height; i++) {
         for (j = 0; j < width; j++) {
-            // maybe check for not enough data?
-            image->data[i][j] = (uint) fgetc(file);
+            if (feof(input_file)) {
+                fprintf(stderr, "ERROR: not enough data in the file according to image dimensions!\n");
+                for (i = 0; i < height; i++) {
+                    free(img->data[i]);
+                }
+                free(img->data);
+                free(img);
+                fclose(input_file);
+                return NULL;
+            }
+            img->data[i][j] = (unsigned int) fgetc(input_file);
         }
     }
 
-    image->width = width;
-    image->height = height;
-    image->max_grey_value = (uint) max;
-    fclose(file);
+    img->width = width;
+    img->height = height;
+    img->max_grey_value = max;
 
-    return image;
+    fclose(input_file);
+
+    return img;
 }
 
 int save_image(image *image, char *image_name) {
@@ -106,7 +118,7 @@ int save_image(image *image, char *image_name) {
 
     // write data
     fprintf(file, "%s\n", "P5");
-    fprintf(file, "%d %d\n", image->width, image->height);
+    fprintf(file, "%zu %zu\n", image->width, image->height);
     fprintf(file, "%d\n", image->max_grey_value);
 
     int i, j;
@@ -122,13 +134,13 @@ int save_image(image *image, char *image_name) {
 }
 
 void free_image(image **image) {
+    int i;
+
     if (!image || !*image) {
         return;
     }
 
-    int i;
-    int image_height = (*image)->height;
-    for (i = 0; i < image_height; i++) {
+    for (i = 0; i < (*image)->height; i++) {
         free((*image)->data[i]);
     }
 
@@ -147,10 +159,9 @@ int is_black_white(image *image) {
         }
     }
 
-    // printf("Image is black and white only...\n");
     return 1;
 }
 
-int in_bounds(int x, int y, int w, int h) {
+int in_bounds(int x, int y, size_t w, size_t h) {
     return x >= 0 && x < w && y >= 0 && y < h;
 }
