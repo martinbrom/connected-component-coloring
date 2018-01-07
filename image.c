@@ -3,6 +3,13 @@
 #include "image.h"
 
 image *read_image(char *image_name) {
+    FILE *file;
+    int buffer_size = 4;
+    char buffer[buffer_size];
+    size_t width, height;
+    unsigned int max;
+    image *image;
+    int i, j;
 
     // check given image name
     if (!image_name) {
@@ -11,27 +18,23 @@ image *read_image(char *image_name) {
     }
 
     // open file
-    FILE *file = fopen(image_name, "r");
+    file = fopen(image_name, "r");
     if (!file) {
         fprintf(stderr, "ERROR: Cannot read file!\n");
         return NULL;
     }
 
     // read the first line
-    int buffer_size = 4;
-    char buffer[buffer_size];
     fgets(buffer, buffer_size, file);
 
     // read image width and height
-    int width, height;
-    if (fscanf(file, "%u %u", &width, &height) != 2) {
+    if (fscanf(file, "%zu %zu", &width, &height) != 2) {
         fprintf(stderr, "ERROR: Wrong format of width or height!\n");
         fclose(file);
         return NULL;
     }
 
     // read maximal gray value
-    int max;
     if (fscanf(file, "%u\n", &max) != 1 || max > 255) {
         fprintf(stderr, "ERROR: Wrong format of maximal grey value!\n");
         fclose(file);
@@ -39,26 +42,26 @@ image *read_image(char *image_name) {
     }
 
     // allocate memory for image instance
-    image *image = malloc(sizeof(image));
+    image = malloc(sizeof(image));
     if (!image) {
         fclose(file);
         return NULL;
     }
 
     // allocate memory for image data
-    image->data = (int **) malloc(height * sizeof(int *));
+    image->data = (unsigned int **) malloc(height * sizeof(unsigned int *));
     if (!image->data) {
         free(image);
         fclose(file);
         return NULL;
     }
 
-    int i, j;
     for (i = 0; i < height; i++) {
-        image->data[i] = (int *) malloc(width * sizeof(int));
+        image->data[i] = (unsigned int *) malloc(width * sizeof(unsigned int));
 
         if (!image->data[i]) {
-            for (i; i <= 0; i--) {
+            i--;
+            for (i; i >= 0; i--) {
                 free(image->data[i]);
             }
 
@@ -73,31 +76,28 @@ image *read_image(char *image_name) {
     for (i = 0; i < height; i++) {
         for (j = 0; j < width; j++) {
             // maybe check for not enough data?
-            image->data[i][j] = (uint) fgetc(file);
+            image->data[i][j] = (unsigned int) fgetc(file);
         }
     }
 
+    printf("HERE\n");
     image->width = width;
+    printf("HERE\n");
     image->height = height;
-    image->max_grey_value = (uint) max;
+    printf("HERE\n");
+    image->max_grey_value = max;
+    printf("HERE\n");
     fclose(file);
-
+    printf("HERE\n");
     return image;
 }
 
 int save_image(image *image, char *image_name) {
-    if (!image) {
-        fprintf(stderr, "ERROR: Image instance missing!");
-        return EXIT_FAILURE;
-    }
-
-    if (!image_name) {
-        fprintf(stderr, "ERROR: Image name missing!");
-        return EXIT_FAILURE;
-    }
+    FILE *file = NULL;
+    int i, j;
+    // check image and image name?
 
     // open file
-    FILE *file = NULL;
     file = fopen(image_name, "w");
     if (!file) {
         fprintf(stderr, "ERROR: Cannot create file!\n");
@@ -106,28 +106,36 @@ int save_image(image *image, char *image_name) {
 
     // write data
     fprintf(file, "%s\n", "P5");
-    fprintf(file, "%d %d\n", image->width, image->height);
-    fprintf(file, "%d\n", image->max_grey_value);
+    fprintf(file, "%zu %zu\n", image->width, image->height);
+    fprintf(file, "%u\n", image->max_grey_value);
 
-    int i, j;
+    // write all image pixels
     for (i = 0; i < image->height; ++i) {
         for (j = 0; j < image->width; ++j) {
             fputc(image->data[i][j], file);
         }
     }
 
+    // write and close
     fflush(file);
     fclose(file);
+
     return EXIT_SUCCESS;
 }
 
+/**
+ *
+ * @param image
+ */
 void free_image(image **image) {
+    size_t image_height;
+    int i;
+
     if (!image || !*image) {
         return;
     }
 
-    int i;
-    int image_height = (*image)->height;
+    image_height = (*image)->height;
     for (i = 0; i < image_height; i++) {
         free((*image)->data[i]);
     }
@@ -138,19 +146,32 @@ void free_image(image **image) {
     *image = NULL;
 }
 
+/**
+ *
+ * @param image
+ * @return
+ */
 int is_black_white(image *image) {
-    for (int i = 0; i < image->height; i++) {
-        for (int j = 0; j < image->width; j++) {
+    unsigned int i, j;
+    for (i = 0; i < image->height; i++) {
+        for (j = 0; j < image->width; j++) {
             if (image->data[i][j] != 255 && image->data[i][j] != 0) {
                 return 0;
             }
         }
     }
 
-    // printf("Image is black and white only...\n");
     return 1;
 }
 
-int in_bounds(int x, int y, int w, int h) {
+/**
+ *
+ * @param x
+ * @param y
+ * @param w
+ * @param h
+ * @return
+ */
+int in_bounds(int x, int y, size_t w, size_t h) {
     return x >= 0 && x < w && y >= 0 && y < h;
 }

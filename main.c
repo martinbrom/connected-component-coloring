@@ -26,6 +26,7 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
+    printf("HERE\n");
     // check whether the image contains only black and white colored pixels
     if (!is_black_white(image)) {
         printf("ERROR: Image must contain only black (0x00) and white (0xFF) pixels!\n");

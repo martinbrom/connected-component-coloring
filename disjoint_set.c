@@ -6,8 +6,8 @@
  * @param item
  * @return
  */
-int find_root(int *roots, int item) {
-    int parent = roots[item];
+unsigned int find_root(unsigned int *roots, unsigned int item) {
+    unsigned int parent = roots[item];
 
     // if parent is the same as item, we found the set root,
     // else try to look recursively up the tree until we find root
@@ -20,7 +20,7 @@ int find_root(int *roots, int item) {
  * @param x
  * @param y
  */
-void unite_sets(int *roots, int x, int y) {
+void unite_sets(unsigned *roots, unsigned int x, unsigned int y) {
     int root_x = find_root(roots, x);
     int root_y = find_root(roots, y);
 

@@ -8,7 +8,7 @@
  * @param item
  * @return A root element of a disjoint set
  */
-int find_root(int *roots, int item);
+unsigned int find_root(unsigned int *roots, unsigned int item);
 
 /**
  * Performs a union on two disjoint sets
@@ -18,6 +18,6 @@ int find_root(int *roots, int item);
  * @param x
  * @param y
  */
-void unite_sets(int *roots, int x, int y);
+void unite_sets(unsigned int *roots, unsigned int x, unsigned int y);
 
 #endif //___DISJOINT_SET__

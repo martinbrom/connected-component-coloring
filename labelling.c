@@ -17,23 +17,25 @@
  * @return Colored image
  */
 int label_components(image *image) {
-    if (!image) {
-        fprintf(stderr, "ERROR: No image given!");
-        return EXIT_FAILURE;
-    }
-
-    // create sets and neighbors tables and their first free index
-    int sets[10000];    // array of disjoint set roots
-    int neighbors[4];   // array of mask pixel colors
-    int set_index = 1;  // starts at 1 because color 0 is black, not grey
-    int neighbor_index = 0;
+    int x, mx, y, my, m;
+    unsigned int sets[10000];    // array of disjoint set roots
+    unsigned int neighbors[4];   // array of mask pixel colors
+    unsigned int set_index = 1;  // starts at 1 because color 0 is black, not grey
+    unsigned int neighbor_index = 0;
+    unsigned int neighbor, color = 1;
+    unsigned int root;
+    unsigned int max_grey_value = 0;
 
     // all directions to get mask pixels from current
     // pixel in a format of [x_offset, y_offset] clockwise
     int mask[4][2] = {{-1, 0}, {-1, -1}, {0, -1}, {1, -1}};
 
+    if (!image) {
+        fprintf(stderr, "ERROR: No image given!");
+        return EXIT_FAILURE;
+    }
+
     // first image pass
-    int x, mx, y, my, m, neighbor, color = 1;
     for (y = 0; y < image->height; y++) {
         for (x = 0; x < image->width; x++) {
 
@@ -85,8 +87,6 @@ int label_components(image *image) {
     // second image pass
     // set color of each pixel to the value of its disjoint set root
     // and find the maximal grey pixel value
-    int root;
-    int max_grey_value = -1;
     for (y = 0; y < image->height; y++) {
         for (x = 0; x < image->width; x++) {
             root = find_root(sets, image->data[y][x]);

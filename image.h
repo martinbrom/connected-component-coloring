@@ -3,16 +3,14 @@
 
 #include <stdio.h>
 
-#define uint unsigned int
-
 /**
  * Class containing image data
  */
 typedef struct {
-    int width;
-    int height;
-    int max_grey_value;
-    int **data;
+    size_t width;
+    size_t height;
+    unsigned int max_grey_value;
+    unsigned int **data;
 } image;
 
 /**
@@ -56,6 +54,6 @@ int is_black_white(image *image);
  * @return True (1) if given coordinates are within
  *         image bounds, False (0) otherwise
  */
-int in_bounds(int x, int y, int w, int h);
+int in_bounds(int x, int y, size_t w, size_t h);
 
 #endif // __IMAGE__
