@@ -1,0 +1,8 @@
+BIN = ccl.exe
+OBJ = image.obj disjoint_set.obj labelling.obj main.obj
+
+.c.obj:
+	cl $< /c
+
+$(BIN): $(OBJ)
+	cl $(OBJ) /Fe$(BIN)

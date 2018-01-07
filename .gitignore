@@ -1,3 +1,7 @@
 .idea
 CMakeLists.txt
 /cmake-build-debug
+*.o
+bridge.pgm
+bridge-out.pgm
+ccl.exe

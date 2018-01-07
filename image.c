@@ -35,7 +35,7 @@ image *read_image(char *image_name) {
     // open file for reading
     input_file = fopen(image_name, "r");
     if (!input_file) {
-        reading_error("Cannot read file", input_file);
+        fprintf(stderr, "Cannot read file!\n");
         return NULL;
     }
 

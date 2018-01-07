@@ -30,7 +30,7 @@ void unite_sets(unsigned int *roots, unsigned int x, unsigned int y) {
     // of the root with smaller index
     if (root_x < root_y) {
         roots[root_y] = roots[root_x];
-    } else if (root_y > root_x) {
+    } else if (root_x > root_y) {
         roots[root_x] = roots[root_y];
     }
 
