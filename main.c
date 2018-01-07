@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "image.h"
+#include "labelling.h"
 
 int main(int argc, char *argv[]) {
 
@@ -19,7 +20,7 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    // check whether the image contains only black and white color
+    // check whether the image contains only black and white colored pixels
     if (!is_black_white(image)) {
         printf("ERROR: Image must contain only black (0x00) and white (0xFF) pixels!\n");
         return EXIT_FAILURE;
@@ -32,7 +33,7 @@ int main(int argc, char *argv[]) {
     }
 
     // save image
-    if (save_image(argv[2], image)) {
+    if (save_image(image, argv[2])) {
         printf("ERROR: Something went wrong during the labeling!\n");
         return EXIT_FAILURE;
     }
@@ -40,6 +41,5 @@ int main(int argc, char *argv[]) {
     // free memory taken by image
     free_image(&image);
 
-    printf("Program finished...\n");
     return EXIT_SUCCESS;
 }
