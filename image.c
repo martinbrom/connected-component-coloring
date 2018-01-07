@@ -43,18 +43,16 @@ int label_components(image *image) {
     }
 
     // create equivalence and neighbors table
-    printf("Creating arrays...");
+    printf("Creating arrays...\n");
     int sets[10000];
     int set_index = 1;  // starts at 1 because color 0 is black, not grey
     int neighbors[4];
     int neighbor_index = 0;
-    printf("done\n");
 
     // all directions to get mask pixels from current
     // pixel in a format of [x_offset, y_offset]
-    printf("Creating mask...");
+    printf("Creating mask...\n");
     int mask[4][2] = {{-1, 0}, {-1, -1}, {0, -1}, {1, -1}};
-    printf("done\n");
 
     // first image pass
     printf("First algorithm pass...");
@@ -106,16 +104,24 @@ int label_components(image *image) {
             }
         }
     }
+    printf("done\n");
 
-    int i;
-    for (i = 0; i < 400; i++) {
-        printf("%d\n", sets[i]);
+    printf("Second algorithm pass...");
+    int root;
+    int max_grey_value = -1;
+    for (y = 0; y < image->height; y++) {
+        for (x = 0; x < image->width; x++) {
+            root = find_root(sets, image->data[y][x]);
+            image->data[y][x] = root;
+
+            if (root > max_grey_value) {
+                max_grey_value = root;
+            }
+        }
     }
 
-    // second image pass
-    // TODO: Second image pass
-
-    printf("all done\n");
+    image->max_grey_value = max_grey_value;
+    printf("done\n");
 
     return EXIT_SUCCESS;
 }

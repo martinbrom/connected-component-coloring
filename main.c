@@ -40,5 +40,6 @@ int main(int argc, char *argv[]) {
     // free memory taken by image
     free_image(&image);
 
+    printf("Program finished...\n");
     return EXIT_SUCCESS;
 }
